@@ -198,6 +198,18 @@ body.sidebar-expanded .content {
     margin-left: var(--sidebar-width);
 }
 
+/* Panels in sidebar (default) mode — match topbar/bottombar height rules */
+#chat-container,
+#filesPanel,
+#gitPanel,
+#settingsPanel,
+#assistPanel,
+#streamPanel,
+#terminal-container {
+    height: 100vh;
+    height: 100dvh;
+}
+
 .logo {
     display: flex;
     align-items: center;

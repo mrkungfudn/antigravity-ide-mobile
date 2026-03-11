@@ -374,17 +374,21 @@ export function SettingsPanel() {
 
             {/* Model Quota */}
             <Section>
-                <div className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-2.5 pl-1 flex items-center justify-between">
-                    <span>{t('mobile.settings.modelQuota')}</span>
+                <div className="flex items-center justify-between mb-2.5 pl-1">
+                    <div className="flex items-center gap-2">
+                        <Zap size={14} className="text-[var(--accent-primary)]" />
+                        <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide">{t('mobile.settings.modelQuota')}</span>
+                    </div>
                     <button
-                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-[var(--accent-primary)] border-none rounded-full text-white text-xs font-semibold cursor-pointer hover:scale-[1.02] transition-transform"
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-glass)] border border-[var(--border)] rounded-full text-[var(--text-secondary)] text-[11px] font-medium cursor-pointer hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] transition-all ${quotaLoading ? 'opacity-60 pointer-events-none' : ''}`}
                         onClick={() => loadQuota()}
                     >
-                        <RefreshCw size={12} /> {t('mobile.common.refresh')}
+                        <RefreshCw size={12} className={quotaLoading ? 'animate-spin' : ''} />
+                        {t('mobile.common.refresh')}
                     </button>
                 </div>
                 <div className="card">
-                    {quotaLoading ? (
+                    {quotaLoading && !quotaData ? (
                         <div className="text-center p-10 text-[var(--text-muted)]">
                             <div className="spinner" />
                             <div className="mt-2.5">{t('mobile.settings.loadingQuota')}</div>
@@ -394,7 +398,7 @@ export function SettingsPanel() {
                             {quotaData?.error || t('mobile.settings.quotaNotFound')}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3 mt-3">
+                        <div className="grid grid-cols-2 gap-3 mt-1">
                             {quotaData.models.map((model, i) => {
                                 const circumference = 2 * Math.PI * 34;
                                 const percent = Math.max(0, Math.min(100, model.remainingPercent || 0));
@@ -403,38 +407,66 @@ export function SettingsPanel() {
                                 const colors = STATUS_COLORS[model.status] || STATUS_COLORS.healthy;
 
                                 return (
-                                    <div key={i} className="bg-[var(--bg-glass)] border border-[var(--border)] rounded-2xl p-4 text-center transition-all duration-300 hover:border-[var(--border-hover)] hover:-translate-y-0.5">
+                                    <div key={i} className="relative bg-[var(--bg-glass)] border border-[var(--border)] rounded-2xl p-4 text-center transition-all duration-300 hover:border-[var(--border-hover)] hover:-translate-y-0.5 overflow-hidden group">
+                                        {/* Subtle glow background */}
+                                        <div
+                                            className="absolute inset-0 opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-500 rounded-2xl"
+                                            style={{ background: `radial-gradient(circle at 50% 30%, ${colors.stroke}, transparent 70%)` }}
+                                        />
+
                                         {/* Quota Ring */}
-                                        <div className="relative w-20 h-20 mx-auto mb-3">
+                                        <div className="relative w-[72px] h-[72px] mx-auto mb-2.5">
                                             <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
                                                 <circle cx="40" cy="40" r="34"
-                                                    fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6"
+                                                    fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5"
                                                 />
                                                 <circle cx="40" cy="40" r="34"
-                                                    fill="none" stroke={colors.stroke} strokeWidth="6"
+                                                    fill="none" stroke={colors.stroke} strokeWidth="5"
                                                     strokeLinecap="round"
                                                     strokeDasharray={circumference} strokeDashoffset={offset}
-                                                    className="transition-[stroke-dashoffset] duration-500 ease-out"
+                                                    className="transition-[stroke-dashoffset] duration-700 ease-out"
+                                                    style={{ filter: `drop-shadow(0 0 4px ${colors.stroke})` }}
                                                 />
                                             </svg>
-                                            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-lg font-bold ${colors.text}`}>
+                                            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-base font-bold tabular-nums ${colors.text}`}>
                                                 {percent.toFixed(0)}%
                                             </div>
                                         </div>
+
                                         {/* Model Name */}
-                                        <div className="text-[13px] font-semibold text-[var(--text-primary)] mb-1 whitespace-nowrap overflow-hidden text-ellipsis" title={model.name}>
+                                        <div className="relative text-[12px] font-semibold text-[var(--text-primary)] mb-1 whitespace-nowrap overflow-hidden text-ellipsis" title={model.name}>
                                             {displayName}
                                         </div>
+
+                                        {/* Linear progress bar */}
+                                        <div className="relative w-full h-1 bg-[rgba(255,255,255,0.06)] rounded-full mt-1.5 mb-2 overflow-hidden">
+                                            <div
+                                                className="h-full rounded-full transition-all duration-700 ease-out"
+                                                style={{
+                                                    width: `${percent}%`,
+                                                    background: colors.stroke,
+                                                    boxShadow: `0 0 6px ${colors.stroke}`,
+                                                }}
+                                            />
+                                        </div>
+
                                         {/* Reset Timer */}
                                         {model.resetIn && (
-                                            <div className="text-[11px] text-[var(--text-muted)] flex items-center gap-1 justify-center">
-                                                <Timer size={12} /> {model.resetIn}
+                                            <div className="relative text-[10px] text-[var(--text-muted)] flex items-center gap-1 justify-center mb-1">
+                                                <Timer size={10} /> {model.resetIn}
                                             </div>
                                         )}
+
                                         {/* Status Badge */}
-                                        <span className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded-[10px] mt-1.5 uppercase ${colors.badge}`}>
-                                            {model.status}
-                                        </span>
+                                        <div className="relative flex items-center justify-center gap-1 mt-1">
+                                            <span
+                                                className="w-1.5 h-1.5 rounded-full inline-block"
+                                                style={{ background: colors.stroke, boxShadow: `0 0 4px ${colors.stroke}` }}
+                                            />
+                                            <span className={`text-[9px] font-bold uppercase tracking-wider ${colors.text}`}>
+                                                {model.status}
+                                            </span>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -485,7 +517,7 @@ export function SettingsPanel() {
             </div>
 
             {/* Sponsorship */}
-            <div className="py-8 text-center opacity-50 hover:opacity-100 transition-opacity">
+            <div className="py-4 text-center opacity-50 hover:opacity-100 transition-opacity">
                 <a href="https://xcloudphone.com?utm_source=AntigravityMobile" target="_blank" rel="noopener noreferrer" className="text-[11px] text-[var(--text-muted)] no-underline inline-flex flex-col items-center gap-2 group">
                     <span className="group-hover:text-[var(--text-primary)] transition-colors">{t('common.sponsoredBy')}</span>
                     <img
